@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Compras - Supermercado</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            border-bottom: 5px solid #3498db;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        header h1 i {
+            color: #2ecc71;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .list-section {
+            flex: 2;
+            min-width: 300px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        .scan-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .camera-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        
+        #cameraPreview {
+            width: 100%;
+            max-width: 300px;
+            background: #333;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .barcode-container {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #barcode {
+            height: 80px;
+            margin: 10px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .total-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: #2ecc71;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .actions button {
+            width: auto;
+            padding: 12px 20px;
+        }
+        
+        .product-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        
+        .photo-container {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        #photoPreview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .scan-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .scan-options button {
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+            border-radius: 0 0 20px 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .actions button {
+                width: 100%;
+            }
+            
+            .scan-options {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .scan-options button {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-shopping-cart"></i> Registro de Compras</h1>
+            <p>Controla tus gastos en el supermercado y lleva un registro detallado</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="form-section">
+                <h2 class="section-title"><i class="fas fa-plus-circle"></i> Agregar Producto</h2>
+                
+                <div class="form-group">
+                    <label for="productName"><i class="fas fa-tag"></i> Nombre del Producto</label>
+                    <input type="text" id="productName" placeholder="Ej: Leche, Pan, Arroz...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="productPrice"><i class="fas fa-dollar-sign"></i> Precio Unitario</label>
+                    <input type="number" id="productPrice" placeholder="0.00" step="0.01" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="productQuantity"><i class="fas fa-calculator"></i> Cantidad</label>
+                    <input type="number" id="productQuantity" value="1" min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="productCategory"><i class="fas fa-list"></i> Categoría</label>
+                    <select id="productCategory">
+                        <option value="alimentos">Alimentos</option>
+                        <option value="bebidas">Bebidas</option>
+                        <option value="limpieza">Limpieza</option>
+                        <option value="higiene">Higiene Personal</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+                
+                <button id="addProductBtn" class="btn-secondary">
+                    <i class="fas fa-cart-plus"></i> Agregar a la Lista
+                </button>
+                
+                <div class="scan-section">
+                    <h3><i class="fas fa-barcode"></i> Escanear Producto</h3>
+                    
+                    <div class="scan-options">
+                        <button id="startCameraBtn">
+                            <i class="fas fa-camera"></i> Usar Cámara
+                        </button>
+                        
+                        <button id="scanBarcodeBtn">
+                            <i class="fas fa-barcode"></i> Escanear Código
+                        </button>
+                    </div>
+                    
+                    <div class="camera-container">
+                        <video id="cameraPreview" autoplay playsinline></video>
+                    </div>
+                    
+                    <div class="photo-container">
+                        <button id="capturePhotoBtn" style="display:none;">
+                            <i class="fas fa-camera"></i> Capturar Foto
+                        </button>
+                        <img id="photoPreview" alt="Vista previa de la foto">
+                    </div>
+                    
+                    <div class="barcode-container">
+                        <p>O ingresa manualmente el código de barras:</p>
+                        <svg id="barcode"></svg>
+                        <input type="text" id="barcodeInput" placeholder="Código de barras">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="list-section">
+                <h2 class="section-title"><i class="fas fa-list-ol"></i> Lista de Compras</h2>
+                
+                <div style="overflow-x:auto;">
+                    <table id="productTable">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productList">
+                            <!-- Los productos se agregarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="total-section">
+                    <p>TOTAL GASTADO: <span id="totalAmount">$0.00</span></p>
+                </div>
+                
+                <div class="actions">
+                    <button id="saveListBtn" class="btn-secondary">
+                        <i class="fas fa-save"></i> Guardar Lista
+                    </button>
+                    <button id="exportExcelBtn">
+                        <i class="fas fa-file-excel"></i> Exportar a Excel
+                    </button>
+                    <button id="clearListBtn" class="btn-danger">
+                        <i class="fas fa-trash-alt"></i> Limpiar Todo
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 Registro de Compras de Supermercado | Desarrollado para controlar tus gastos</p>
+        </footer>
+    </div>
+
+    <script>
+        // Variables globales
+        let products = [];
+        let total = 0;
+        let stream = null;
+        
+        // Referencias a elementos del DOM
+        const productForm = document.getElementById('productForm');
+        const productNameInput = document.getElementById('productName');
+        const productPriceInput = document.getElementById('productPrice');
+        const productQuantityInput = document.getElementById('productQuantity');
+        const productCategoryInput = document.getElementById('productCategory');
+        const addProductBtn = document.getElementById('addProductBtn');
+        const productList = document.getElementById('productList');
+        const totalAmount = document.getElementById('totalAmount');
+        const clearListBtn = document.getElementById('clearListBtn');
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
+        const saveListBtn = document.getElementById('saveListBtn');
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        const capturePhotoBtn = document.getElementById('capturePhotoBtn');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const photoPreview = document.getElementById('photoPreview');
+        const scanBarcodeBtn = document.getElementById('scanBarcodeBtn');
+        const barcodeInput = document.getElementById('barcodeInput');
+        const barcodeSvg = document.getElementById('barcode');
+        
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedProducts();
+            updateTotal();
+            
+            // Generar un código de barras de ejemplo
+            JsBarcode(barcodeSvg, "123456789012", {
+                format: "CODE128",
+                displayValue: true,
+                fontSize: 16,
+                height: 50
+            });
+        });
+        
+        // Event Listeners
+        addProductBtn.addEventListener('click', addProduct);
+        clearListBtn.addEventListener('click', clearList);
+        exportExcelBtn.addEventListener('click', exportToExcel);
+        saveListBtn.addEventListener('click', saveList);
+        startCameraBtn.addEventListener('click', startCamera);
+        capturePhotoBtn.addEventListener('click', capturePhoto);
+        scanBarcodeBtn.addEventListener('click', scanBarcode);
+        barcodeInput.addEventListener('input', updateBarcode);
+        
+        // Funciones principales
+        function addProduct() {
+            const name = productNameInput.value.trim();
+            const price = parseFloat(productPriceInput.value);
+            const quantity = parseInt(productQuantityInput.value) || 1;
+            const category = productCategoryInput.value;
+            
+            if (!name || isNaN(price) || price <= 0) {
+                alert('Por favor ingresa un nombre y precio válidos para el producto.');
+                return;
+            }
+            
+            const product = {
+                id: Date.now(),
+                name,
+                price,
+                quantity,
+                category,
+                subtotal: (price * quantity).toFixed(2),
+                timestamp: new Date().toLocaleString()
+            };
+            
+            products.push(product);
+            renderProduct(product);
+            updateTotal();
+            
+            // Resetear formulario
+            productNameInput.value = '';
+            productPriceInput.value = '';
+            productQuantityInput.value = '1';
+            productNameInput.focus();
+        }
+        
+        function renderProduct(product) {
+            const row = document.createElement('tr');
+            
+            // Iconos por categoría
+            const categoryIcons = {
+                alimentos: 'fa-apple-alt',
+                bebidas: 'fa-wine-bottle',
+                limpieza: 'fa-pump-soap',
+                higiene: 'fa-soap',
+                otros: 'fa-box'
+            };
+            
+            row.innerHTML = `
+                <td><i class="fas ${categoryIcons[product.category]}"></i> ${product.name}</td>
+                <td>$${product.price.toFixed(2)}</td>
+                <td>${product.quantity}</td>
+                <td>$${product.subtotal}</td>
+                <td>
+                    <button class="btn-danger" onclick="removeProduct(${product.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            productList.appendChild(row);
+        }
+        
+        function removeProduct(id) {
+            products = products.filter(product => product.id !== id);
+            refreshProductList();
+            updateTotal();
+        }
+        
+        function refreshProductList() {
+            productList.innerHTML = '';
+            products.forEach(product => renderProduct(product));
+        }
+        
+        function updateTotal() {
+            total = products.reduce((sum, product) => sum + parseFloat(product.subtotal), 0);
+            totalAmount.textContent = `$${total.toFixed(2)}`;
+        }
+        
+        function clearList() {
+            if (confirm('¿Estás seguro de que quieres borrar toda la lista de compras?')) {
+                products = [];
+                productList.innerHTML = '';
+                updateTotal();
+                localStorage.removeItem('shoppingList');
+            }
+        }
+        
+        function saveList() {
+            localStorage.setItem('shoppingList', JSON.stringify(products));
+            alert('Lista guardada correctamente.');
+        }
+        
+        function loadSavedProducts() {
+            const savedProducts = localStorage.getItem('shoppingList');
+            if (savedProducts) {
+                products = JSON.parse(savedProducts);
+                refreshProductList();
+            }
+        }
+        
+        function exportToExcel() {
+            if (products.length === 0) {
+                alert('No hay productos para exportar.');
+                return;
+            }
+            
+            // Preparar datos para Excel
+            const data = products.map(product => ({
+                'Producto': product.name,
+                'Precio Unitario': product.price,
+                'Cantidad': product.quantity,
+                'Subtotal': product.subtotal,
+                'Categoría': product.category,
+                'Fecha': product.timestamp
+            }));
+            
+            // Añadir total
+            data.push({
+                'Producto': 'TOTAL',
+                'Precio Unitario': '',
+                'Cantidad': '',
+                'Subtotal': total.toFixed(2)
+            });
+            
+            // Crear hoja de trabajo
+            const ws = XLSX.utils.json_to_sheet(data);
+            
+            // Crear libro de trabajo y añadir hoja
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Lista de Compras");
+            
+            // Descargar archivo
+            XLSX.writeFile(wb, 'lista_compras.xlsx');
+        }
+        
+        // Funciones de cámara y escaneo
+        function startCamera() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                stopCamera(); // Detener cualquier transmisión existente
+                
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(mediaStream) {
+                        stream = mediaStream;
+                        cameraPreview.srcObject = stream;
+                        cameraPreview.style.display = 'block';
+                        startCameraBtn.style.display = 'none';
+                        capturePhotoBtn.style.display = 'block';
+                    })
+                    .catch(function(error) {
+                        console.error('Error al acceder a la cámara:', error);
+                        alert('No se pudo acceder a la cámara. Asegúrate de dar los permisos necesarios.');
+                    });
+            } else {
+                alert('Tu navegador no soporta el acceso a la cámara o estás en un entorno inseguro (HTTP).');
+            }
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                cameraPreview.srcObject = null;
+                cameraPreview.style.display = 'none';
+                startCameraBtn.style.display = 'block';
+                capturePhotoBtn.style.display = 'none';
+            }
+        }
+        
+        function capturePhoto() {
+            if (!stream) return;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = cameraPreview.videoWidth;
+            canvas.height = cameraPreview.videoHeight;
+            
+            const context = canvas.getContext('2d');
+            context.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+            
+            photoPreview.src = canvas.toDataURL('image/png');
+            photoPreview.style.display = 'block';
+            
+            // Simular detección de precio (en una aplicación real usarías OCR)
+            setTimeout(() => {
+                const randomPrice = (Math.random() * 50 + 1).toFixed(2);
+                alert(`¡Foto tomada! Precio detectado: $${randomPrice}\n\nNota: En una aplicación real, esto usaría OCR para detectar el precio.`);
+                productPriceInput.value = randomPrice;
+                productNameInput.focus();
+            }, 1000);
+            
+            stopCamera();
+        }
+        
+        function scanBarcode() {
+            // Simular escaneo de código de barras
+            const fakeProducts = [
+                { name: "Leche Entera 1L", price: 1.20 },
+                { name: "Pan Integral", price: 2.50 },
+                { name: "Arroz 1kg", price: 1.80 },
+                { name: "Huevos (12 unidades)", price: 3.00 },
+                { name: "Manzanas 1kg", price: 2.30 }
+            ];
+            
+            const randomProduct = fakeProducts[Math.floor(Math.random() * fakeProducts.length)];
+            
+            productNameInput.value = randomProduct.name;
+            productPriceInput.value = randomProduct.price;
+            productQuantityInput.focus();
+            
+            alert(`Producto escaneado: ${randomProduct.name}\nPrecio: $${randomProduct.price.toFixed(2)}`);
+        }
+        
+        function updateBarcode() {
+            const code = barcodeInput.value.trim() || "123456789012";
+            JsBarcode(barcodeSvg, code, {
+                format: "CODE128",
+                displayValue: true,
+                fontSize: 16,
+                height: 50
+            });
+        }
+        
+        // Manejar cierre de la cámara al salir de la página
+        window.addEventListener('beforeunload', stopCamera);
+    </script>
+</body>
+</html>
